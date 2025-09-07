@@ -1,20 +1,47 @@
 options:
   logging: CLOUD_LOGGING_ONLY
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET  # satisfies org policy
+
+substitutions:
+  _REGION: us-central1
+  _REPO: services
+  _IMAGE: id-service
 
 steps:
+  # Build image in Artifact Registry and tag with commit SHA and 'latest'
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/id-service:latest', '.']
-  
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest'
+      - '.'
+
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/id-service:latest']
-  
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest'
+
+  # (Optional) Deploy automatically to Cloud Run; you can remove this and deploy manually if you prefer.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
-      - 'run'
-      - 'deploy' 
-      - 'id-service'
-      - '--image=gcr.io/$PROJECT_ID/id-service:latest'
-      - '--region=us-central1'
+      - run
+      - deploy
+      - ${_IMAGE}
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest'
+      - '--region=${_REGION}'
+      - '--service-account=df-domains@$PROJECT_ID.iam.gserviceaccount.com'
       - '--set-env-vars=PROJECT=$PROJECT_ID'
       - '--no-allow-unauthenticated'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest'
+
