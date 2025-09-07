@@ -28,7 +28,7 @@ steps:
       - 'push'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest'
 
-  # (Optional) Deploy automatically to Cloud Run; you can remove this and deploy manually if you prefer.
+  # Deploy automatically to Cloud Run; remove this and deploy manually if you prefer.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
