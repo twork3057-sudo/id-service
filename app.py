@@ -43,7 +43,7 @@ def mint():
         "is_active": True,
         "created_ts": datetime.datetime.utcnow().isoformat(),
         "updated_ts": datetime.datetime.utcnow().isoformat(),
-        "metadata": json.dumps({"source":"id_service"})
+        "metadata": {"source": "id_service"}
     }
     bq.insert_rows_json(table, [row])  # simple insert
     return jsonify({"pk": pk, "domain": domain})
